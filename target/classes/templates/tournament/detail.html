@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(${tournament.name} + ' · Trophée')}"></head>
+<body class="anim">
+
+<div th:replace="~{fragments/layout :: sidebar('tournaments')}"></div>
+
+<div class="app-main">
+    <header th:replace="~{fragments/layout :: topbar(${tournament.name})}"></header>
+
+    <main class="content">
+        <div th:replace="~{fragments/messages :: messages}"></div>
+
+        <section class="card mb" data-aos="fade-up">
+            <div class="card-head">
+                <h2><span class="kicker">◆</span>Compétition</h2>
+                <div class="btn-row">
+                    <sec:authorize access="hasAnyRole('ADMIN','MANAGER')">
+                    <form th:if="${tournament.status.name() != 'TERMINE' and tournament.status.name() != 'ANNULE'}"
+                          method="post" th:action="@{/tournaments/{id}/status(id=${tournament.id})}" class="flex gap" style="margin:0">
+                        <select class="input" name="status" style="min-width:150px">
+                            <option th:each="s : ${allStatuses}"
+                                    th:value="${s}"
+                                    th:selected="${s == tournament.status}"
+                                    th:text="${#strings.replace(s,'_',' ')}">STATUT</option>
+                        </select>
+                        <button type="submit" class="btn btn-ghost btn-sm">Mettre à jour</button>
+                    </form>
+                    </sec:authorize>
+                    <sec:authorize access="hasAnyRole('ADMIN','MANAGER')">
+                        <form th:if="${tournament.status.name() == 'INSCRIPTION' or tournament.status.name() == 'PROGRAMME'}"
+                              method="post" th:action="@{/tournaments/{id}/start(id=${tournament.id})}" style="margin:0">
+                            <button type="submit" class="btn btn-amber btn-sm">▶ Démarrer</button>
+                        </form>
+                        <form th:if="${tournament.status.name() == 'INSCRIPTION' or tournament.status.name() == 'PROGRAMME'}"
+                              method="post" th:action="@{/tournaments/{id}/generate(id=${tournament.id})}" style="margin:0">
+                            <button type="submit" class="btn btn-primary btn-sm">⚙ Générer le calendrier</button>
+                        </form>
+                        <a th:href="@{/tournaments/{id}/edit(id=${tournament.id})}" class="btn btn-ghost btn-sm">Modifier</a>
+                    </sec:authorize>
+                    <sec:authorize access="hasRole('ADMIN')">
+                        <form th:if="${tournament.status.name() == 'BROUILLON' or tournament.status.name() == 'ANNULE'}"
+                              method="post" th:action="@{/tournaments/{id}/delete(id=${tournament.id})}" style="margin:0">
+                            <button type="submit" class="btn btn-danger btn-sm">✕ Supprimer</button>
+                        </form>
+                    </sec:authorize>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="meta-line mb">
+                    <span th:text="'Sport : ' + ${tournament.sport}"><b>Sport</b></span>
+                    <span><b th:text="${#temporals.format(tournament.startDate,'dd MMMM yyyy')}">—</b> → <b th:text="${#temporals.format(tournament.endDate,'dd MMMM yyyy')}">—</b></span>
+                    <span th:text="'Lieu : ' + ${tournament.location}">Lieu</span>
+                    <span><b th:text="${tournament.registeredTeamCount}">0</b> / <b th:text="${tournament.maxTeams}">8</b> équipes</span>
+                </div>
+
+                <div class="grid-cards grid-4 mt">
+                    <div class="card tile tile-accent tilt">
+                        <span class="tile-label">Statut</span>
+                        <span class="tile-value" style="font-size:22px;margin-top:14px">
+                            <span th:replace="~{fragments/messages :: statusBadge(${tournament.status})}"></span>
+                        </span>
+                    </div>
+                    <div class="card tile tile-amber tilt">
+                        <span class="tile-label">Matchs joués</span>
+                        <span class="tile-value count-up" th:attr="data-count=${tournament.completedMatchCount}" th:text="${tournament.completedMatchCount}">0</span>
+                        <span class="tile-value" style="font-size:18px;margin:0;color:var(--muted)" th:text="' / ' + ${tournament.matchCount}">/ 0</span>
+                    </div>
+                    <div class="card tile tile-teal tilt">
+                        <span class="tile-label">Buts marqués</span>
+                        <span class="tile-value count-up" th:attr="data-count=${stats.totalGoals}" th:text="${stats.totalGoals}">0</span>
+                    </div>
+                    <div class="card tile tile-blue tilt">
+                        <span class="tile-label">Moyenne / match</span>
+                        <span class="tile-value count-up" th:attr="data-count=${stats.averageGoalsPerMatch}" th:text="${#numbers.formatDecimal(stats.averageGoalsPerMatch,1,2)}">0.0</span>
+                    </div>
+                </div>
+
+                <div th:if="${tournament.description != null and !tournament.description.isBlank()}">
+                    <div class="divider"></div>
+                    <p class="muted" style="margin:0" th:text="${tournament.description}">Description</p>
+                </div>
+
+                <div th:if="${tournament.matchCount > 0}" class="mt">
+                    <div class="between flex mb" style="font-size:12.5px;color:var(--muted)">
+                        <span>Avancement du tournoi</span>
+                        <span th:text="${#numbers.formatDecimal(stats.completionRate,1,1) + '%'}">0%</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill" th:attr="data-target=${stats.completionRate}"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TABS -->
+        <div class="tabs">
+            <a th:href="@{/tournaments/{id}(id=${tournament.id},tab='overview')}"
+               th:classappend="${activeTab == 'overview'} ? 'active'">Vue d'ensemble</a>
+            <a th:href="@{/tournaments/{id}(id=${tournament.id},tab='teams')}"
+               th:classappend="${activeTab == 'teams'} ? 'active'">Équipes</a>
+            <a th:href="@{/tournaments/{id}(id=${tournament.id},tab='matches')}"
+               th:classappend="${activeTab == 'matches'} ? 'active'">Matchs</a>
+            <a th:href="@{/tournaments/{id}(id=${tournament.id},tab='ranking')}"
+               th:if="${tournament.type.name() != 'ELIMINATION_DIRECTE'}"
+               th:classappend="${activeTab == 'ranking'} ? 'active'">Classement</a>
+            <a th:href="@{/tournaments/{id}(id=${tournament.id},tab='bracket')}"
+               th:if="${tournament.type.name() == 'ELIMINATION_DIRECTE'}"
+               th:classappend="${activeTab == 'bracket'} ? 'active'">Arbre de la compétition</a>
+        </div>
+
+        <!-- ============ OVERVIEW ============ -->
+        <div th:if="${activeTab == 'overview'}">
+            <div class="grid-cards grid-2 grid-gap">
+                <section class="card card-lift" data-aos="fade-right">
+                    <div class="card-head"><h2><span class="kicker">▲</span>Équipes inscrites</h2>
+                        <a th:href="@{/tournaments/{id}(id=${tournament.id},tab='teams')}" class="btn btn-ghost btn-sm">Gérer</a></div>
+                    <div th:each="r : ${registrations}" class="flex between" style="padding:10px 20px;border-bottom:1px solid var(--line)">
+                        <div class="cell-team">
+                            <span class="shield-mini" th:classappend="${r.seed % 2 == 0} ? 'alt'"
+                                  th:text="${#strings.substring(r.teamName,0,1)}">A</span>
+                            <div>
+                                <div class="tname" th:text="${r.teamName}">Équipe</div>
+                                <small class="muted" th:text="'Tête de série #' + ${r.seed}">Seed</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div th:if="${registrations.isEmpty()}" class="empty">Aucune équipe inscrite</div>
+                </section>
+
+                <section class="card card-lift" data-aos="fade-left">
+                    <div class="card-head"><h2><span class="kicker">⊕</span>Prochains matchs</h2>
+                        <a th:href="@{/tournaments/{id}(id=${tournament.id},tab='matches')}" class="btn btn-ghost btn-sm">Calendrier</a></div>
+                    <div th:each="m : ${matches}" th:if="${m.status.name() == 'PROGRAMME'}"
+                         style="padding:11px 20px;border-bottom:1px solid var(--line)"
+                         th:classappend="${#lists.size(matches)}">
+                        <div class="flex between">
+                            <span class="faint" th:text="${#strings.replace(m.phase,'_',' ')}">Phase</span>
+                            <span class="faint" th:text="${#temporals.format(m.scheduledAt,'dd/MM HH:mm')}">Date</span>
+                        </div>
+                        <div class="flex between" style="margin-top:2px">
+                            <span class="tname" th:text="${m.homeTeamName}">A</span>
+                            <span class="muted">vs</span>
+                            <span class="tname" th:text="${m.awayTeamName}">B</span>
+                        </div>
+                    </div>
+                    <div th:if="${#lists.isEmpty(matches)}" class="empty">Calendrier non généré</div>
+                </section>
+            </div>
+        </div>
+
+        <!-- ============ TEAMS ============ -->
+        <div th:if="${activeTab == 'teams'}">
+            <section class="card card-lift mb" data-aos="fade-up">
+                <div class="card-head">
+                    <h2><span class="kicker">▲</span>Équipes du tournoi
+                        <span class="muted" th:text="( '(' + ${#lists.size(registrations)} + '/' + ${tournament.maxTeams} + ')' )"></span></h2>
+                </div>
+                <div class="table-wrap">
+                    <table class="sheet">
+                        <thead>
+                        <tr><th class="pos">#</th><th>Équipe</th><th>Ville</th><th>Inscription</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="r : ${registrations}">
+                            <td class="pos"><strong th:text="${r.seed}">1</strong></td>
+                            <td>
+                                <div class="cell-team">
+                                    <span class="shield-mini" th:text="${#strings.substring(r.teamName,0,1)}">A</span>
+                                    <span class="tname" th:text="${r.teamName}">Équipe</span>
+                                </div>
+                            </td>
+                            <td class="muted" th:text="${r.teamCity}">Ville</td>
+                            <td class="muted" th:text="${#temporals.format(r.registrationDate,'dd/MM/yy HH:mm')}">Date</td>
+                            <td class="nowrap">
+                                <sec:authorize access="hasAnyRole('ADMIN','MANAGER','OPERATOR')">
+                                <form th:if="${tournament.status.name() == 'BROUILLON' or tournament.status.name() == 'INSCRIPTION' or tournament.status.name() == 'PROGRAMME'}"
+                                      method="post" th:action="@{/tournaments/{id}/teams/{teamId}/remove(id=${tournament.id}, teamId=${r.teamId})}" style="margin:0">
+                                    <button class="btn btn-danger btn-sm">Retirer</button>
+                                </form>
+                                </sec:authorize>
+                            </td>
+                        </tr>
+                        <tr th:if="${registrations.isEmpty()}">
+                            <td colspan="5"><div class="empty">Aucune équipe inscrite pour l'instant</div></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <sec:authorize access="hasAnyRole('ADMIN','MANAGER','OPERATOR')">
+            <section class="card card-lift" th:if="${tournament.status.name() == 'BROUILLON' or tournament.status.name() == 'INSCRIPTION'}">
+                <div class="card-head"><h2><span class="kicker">⊕</span>Inscrire une équipe</h2></div>
+                <form method="post" th:action="@{/tournaments/{id}/teams(id=${tournament.id})}" class="filterbar"
+                      th:if="${!#lists.isEmpty(availableTeams)}">
+                    <select class="input grow" name="teamId" required>
+                        <option th:each="t : ${availableTeams}" th:value="${t.id}" th:text="${t.name + ' — ' + t.city}">Équipe</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary">Inscrire</button>
+                </form>
+                <div th:if="${#lists.isEmpty(availableTeams)}" class="empty">
+                    Aucune autre équipe disponible — créez-en une dans la section Équipes.
+                </div>
+            </section>
+            </sec:authorize>
+        </div>
+
+        <!-- ============ MATCHES ============ -->
+        <div th:if="${activeTab == 'matches'}">
+            <section class="card card-lift" data-aos="fade-up">
+                <div class="card-head">
+                    <h2><span class="kicker">⊕</span>Calendrier
+                        <span class="muted" th:text="'· ' + ${#lists.size(matches)} + ' match(s)'"></span></h2>
+                </div>
+                <div class="card-body compact">
+                    <div th:each="entry : ${matchesByRound}"
+                         th:with="roundEntries=${entry.value}">
+                        <div class="flex between mt" style="padding:0 10px">
+                            <h3 class="tname" style="font-size:12px;letter-spacing:.14em;color:var(--amber);text-transform:uppercase"
+                                th:text="'JOURNÉE ' + ${entry.key}">JOURNÉE 1</h3>
+                            <span class="faint"
+                                  th:text="${#strings.replace(roundEntries[0].phase,'_',' ')}">Phase</span>
+                        </div>
+                        <div th:each="m : ${roundEntries}" class="match-row">
+                            <div class="mr-home">
+                                <span class="muted" th:text="${#temporals.format(m.scheduledAt,'dd/MM HH:mm')}">Date</span><br>
+                                <span class="tname" th:text="${m.homeTeamName}">Home</span>
+                            </div>
+                            <div class="mr-score">
+                                <a th:href="@{/matches/{id}(id=${m.id})}"
+                                   th:text="${m.status.name() == 'TERMINE' ? (m.homeScore + ' - ' + m.awayScore) : 'VS'}">0 - 0</a>
+                            </div>
+                            <div class="mr-away">
+                                <span class="tname" th:text="${m.awayTeamName}">Away</span><br>
+                                <span class="muted" th:text="${m.venue}">Terrain</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div th:if="${#lists.isEmpty(matches)}" class="empty">
+                        Calendrier non généré — validez les équipes puis cliquez « Générer le calendrier ».
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ============ RANKING ============ -->
+        <div th:if="${activeTab == 'ranking' and ranking != null}">
+            <section class="card card-lift" data-aos="fade-up">
+                <div class="card-head">
+                    <h2><span class="kicker">▤</span>Classement</h2>
+                    <span class="muted" th:text="'Critères : ' + ${#strings.listJoin(ranking.criteria, ', ')}">critères</span>
+                </div>
+                <div class="table-wrap">
+                    <table class="sheet">
+                        <thead>
+                        <tr>
+                            <th class="pos">Pos</th><th>Équipe</th>
+                            <th class="pos">J</th><th class="pos">G</th><th class="pos">N</th><th class="pos">P</th>
+                            <th class="pos">BP</th><th class="pos">BC</th><th class="pos">Diff</th>
+                            <th class="pos">Pts</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="s : ${ranking.standings}" th:classappend="${s.position <= 3} ? 'rank-top'">
+                            <td class="pos">
+                                <span class="rank-medal" th:classappend="${s.position == 1} ? 'medal-1' : (${s.position == 2} ? 'medal-2' : (${s.position == 3} ? 'medal-3' : ''))"
+                                      th:text="${s.position}">1</span>
+                            </td>
+                            <td><strong th:text="${s.teamName}">Équipe</strong></td>
+                            <td class="num" th:text="${s.played}">0</td>
+                            <td class="num" th:text="${s.wins}">0</td>
+                            <td class="num" th:text="${s.draws}">0</td>
+                            <td class="num" th:text="${s.losses}">0</td>
+                            <td class="num" th:text="${s.goalsFor}">0</td>
+                            <td class="num" th:text="${s.goalsAgainst}">0</td>
+                            <td class="num" th:style="${s.goalDifference >= 0} ? 'color:var(--accent)' : 'color:var(--danger)'"
+                                th:text="${s.goalDifference > 0 ? '+' + s.goalDifference : s.goalDifference}">0</td>
+                            <td class="num"><strong style="color:var(--amber);font-size:15px" th:text="${s.points}">0</strong></td>
+                        </tr>
+                        <tr th:if="${ranking.standings.isEmpty()}">
+                            <td colspan="10"><div class="empty">Aucun résultat — le classement sera calculé dès les premiers matchs joués.</div></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- ============ BRACKET ============ -->
+        <div th:if="${activeTab == 'bracket' and bracket != null}">
+            <section class="card card-lift" data-aos="fade-up">
+                <div class="card-head">
+                    <h2><span class="kicker">δ</span>Arbre d'élimination</h2>
+                    <span class="muted" th:text="'Tableau : ' + ${bracket.bracketSize} + ' emplacements'">taille</span>
+                </div>
+                <div class="bracket stagger">
+                    <div th:each="round : ${bracket.rounds}" class="bracket-round">
+                        <h3 th:text="${#strings.replace(round.phase,'_',' ')}">Phase</h3>
+                        <div th:each="m : ${round.matches}" class="bracket-slot">
+                            <div class="bs-meta">
+                                <span th:text="'Tour ' + ${round.roundNumber}">Tour</span>
+                                <span th:text="${#temporals.format(m.scheduledAt,'dd/MM')}">Date</span>
+                            </div>
+                            <div class="bs-line" th:classappend="${m.winnerTeamId != null and m.winnerTeamId == m.homeTeamId} ? 'winner'">
+                                <span th:if="${m.homeTeamId != null}" th:text="${m.homeLabel}">Home</span>
+                                <span th:if="${m.homeTeamId == null}" class="slot-source" th:text="${m.homeLabel}">Vainqueur</span>
+                                <span class="bs-score" th:text="${m.homeScore}">0</span>
+                            </div>
+                            <div class="bs-line" th:classappend="${m.winnerTeamId != null and m.winnerTeamId == m.awayTeamId} ? 'winner'">
+                                <span th:if="${m.awayTeamId != null}" th:text="${m.awayLabel}">Away</span>
+                                <span th:if="${m.awayTeamId == null}" class="slot-source" th:text="${m.awayLabel}">Vainqueur</span>
+                                <span class="bs-score" th:text="${m.awayScore}">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pending-box" style="align-self:center">
+                        Les tours suivants sont générés<br>dès la fin du tour précédent
+                    </div>
+                </div>
+            </section>
+        </div>
+
+    </main>
+</div>
+
+</body>
+</html>

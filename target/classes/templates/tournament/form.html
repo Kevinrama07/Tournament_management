@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Édition tournoi · Trophée')}"></head>
+<body class="anim">
+
+<div th:replace="~{fragments/layout :: sidebar('tournaments')}"></div>
+
+<div class="app-main">
+    <header th:replace="~{fragments/layout :: topbar(${mode == 'edit'} ? 'Modifier le tournoi' : 'Nouveau tournoi')}"></header>
+
+    <main class="content">
+        <div th:replace="~{fragments/messages :: messages}"></div>
+
+        <section class="card card-lift" style="max-width:860px" data-aos="fade-up">
+            <div class="card-head">
+                <h2><span class="kicker">◆</span><span th:text="${mode == 'edit'} ? 'Fiche tournoi' : 'Nouvelle compétition'">Titre</span></h2>
+            </div>
+
+            <form th:action="${mode == 'edit'} ? @{/tournaments/{id}(id=${tournamentId})} : @{/tournaments}"
+                  th:object="${form}" method="post" class="card-body">
+                <div class="form-grid">
+                    <div class="field">
+                        <label class="req" for="name">Nom du tournoi</label>
+                        <input class="input" th:classappend="${#fields.hasErrors('name')} ? 'has-error'" type="text" id="name" th:field="*{name}" placeholder="Coupe Automne 2026">
+                        <span class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Erreur</span>
+                    </div>
+                    <div class="field">
+                        <label class="req" for="sport">Sport</label>
+                        <input class="input" th:classappend="${#fields.hasErrors('sport')} ? 'has-error'" type="text" id="sport" th:field="*{sport}" placeholder="Football, Basket, Volley...">
+                        <span class="field-error" th:if="${#fields.hasErrors('sport')}" th:errors="*{sport}">Erreur</span>
+                    </div>
+
+                    <div class="field">
+                        <label class="req" for="startDate">Date de début</label>
+                        <input class="input" th:classappend="${#fields.hasErrors('startDate')} ? 'has-error'" type="date" id="startDate" th:field="*{startDate}">
+                        <span class="field-error" th:if="${#fields.hasErrors('startDate')}" th:errors="*{startDate}">Erreur</span>
+                    </div>
+                    <div class="field">
+                        <label class="req" for="endDate">Date de fin</label>
+                        <input class="input" th:classappend="${#fields.hasErrors('endDate')} ? 'has-error'" type="date" id="endDate" th:field="*{endDate}">
+                        <span class="field-error" th:if="${#fields.hasErrors('endDate')}" th:errors="*{endDate}">Erreur</span>
+                    </div>
+
+                    <div class="field">
+                        <label class="req" for="location">Lieu</label>
+                        <input class="input" th:classappend="${#fields.hasErrors('location')} ? 'has-error'" type="text" id="location" th:field="*{location}" placeholder="Stade Municipal">
+                        <span class="field-error" th:if="${#fields.hasErrors('location')}" th:errors="*{location}">Erreur</span>
+                    </div>
+                    <div class="field">
+                        <label class="req" for="maxTeams">Équipes max.</label>
+                        <input class="input" th:classappend="${#fields.hasErrors('maxTeams')} ? 'has-error'" type="number" id="maxTeams" th:field="*{maxTeams}" min="2" max="64">
+                        <span class="field-error" th:if="${#fields.hasErrors('maxTeams')}" th:errors="*{maxTeams}">Erreur</span>
+                    </div>
+
+                    <div class="field">
+                        <label class="req" for="type">Format</label>
+                        <select class="input" id="type" th:field="*{type}">
+                            <option value="CHAMPIONNAT_SIMPLE">Championnat simple</option>
+                            <option value="CHAMPIONNAT_ALLER_RETOUR">Championnat aller-retour</option>
+                            <option value="ELIMINATION_DIRECTE">Élimination directe</option>
+                        </select>
+                        <span class="field-error" th:if="${#fields.hasErrors('type')}" th:errors="*{type}">Erreur</span>
+                    </div>
+
+                    <div class="field full">
+                        <label for="description">Description</label>
+                        <textarea class="input" id="description" th:field="*{description}" placeholder="Détails de la compétition, règlement..."></textarea>
+                    </div>
+
+                    <div class="full btn-row">
+                        <button type="submit" class="btn btn-primary"
+                                th:text="${mode == 'edit'} ? 'Enregistrer' : 'Créer le tournoi'">Créer</button>
+                        <a th:href="${mode == 'edit'} ? @{/tournaments/{id}(id=${tournamentId})} : @{/tournaments}"
+                           class="btn btn-ghost">Annuler</a>
+                    </div>
+                </div>
+            </form>
+        </section>
+    </main>
+</div>
+
+</body>
+</html>

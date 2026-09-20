@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Équipes · Trophée')}"></head>
+<body class="anim">
+
+<div th:replace="~{fragments/layout :: sidebar('teams')}"></div>
+
+<div class="app-main">
+    <header th:replace="~{fragments/layout :: topbar('Équipes')}"></header>
+
+    <main class="content">
+        <div th:replace="~{fragments/messages :: messages}"></div>
+
+        <section class="card card-lift mb" data-aos="fade-up">
+            <form method="get" th:action="@{/teams}" class="filterbar">
+                <input class="input grow" type="search" name="search" th:value="${search}"
+                       placeholder="Rechercher par nom, ville ou entraîneur...">
+                <select class="input" name="status">
+                    <option value="">Tous les statuts</option>
+                    <option th:each="s : ${allStatuses}" th:value="${s}"
+                            th:selected="${status != null and status.name() == s.name()}"
+                            th:text="${#strings.replace(s,'_',' ')}">STATUT</option>
+                </select>
+                <button type="submit" class="btn btn-ghost">Filtrer</button>
+                <sec:authorize access="hasAnyRole('ADMIN','MANAGER','OPERATOR')">
+                <a href="/teams/new" class="btn btn-primary" style="margin-left:auto">+ Créer une équipe</a>
+                </sec:authorize>
+            </form>
+        </section>
+
+        <section class="card card-lift" data-aos="fade-up" data-aos-delay="60">
+            <div class="table-wrap">
+                <table class="sheet">
+                    <thead>
+                    <tr>
+                        <th>Équipe</th>
+                        <th>Ville</th>
+                        <th>Entraîneur</th>
+                        <th class="pos">Joueurs</th>
+                        <th>Statut</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="t : ${page.content}">
+                        <td>
+                            <div class="cell-team">
+                                <span class="shield-mini" th:classappend="${#strings.length(t.name) % 2 == 1} ? '' : 'alt'"
+                                      th:text="${#strings.substring(t.name,0,1)}">A</span>
+                                <span class="tname" th:text="${t.name}">Équipe</span>
+                            </div>
+                        </td>
+                        <td class="muted" th:text="${t.city}">Ville</td>
+                        <td th:text="${t.coach ?: '—'}">Coach</td>
+                        <td class="num" th:text="${t.playerCount}">0</td>
+                        <td><span th:replace="~{fragments/messages :: statusBadge(${t.status})}"></span></td>
+                        <td class="nowrap">
+                            <a th:href="@{/teams/{id}(id=${t.id})}" class="btn btn-ghost btn-sm">Ouvrir</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${page.content.isEmpty()}">
+                        <td colspan="6"><div class="empty">Aucune équipe trouvée</div></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pager">
+                <span th:text="'Page ' + (${page.number} + 1) + ' sur ' + (${page.totalPages == 0 ? 1 : page.totalPages}) + ' · ' + ${page.totalElements} + ' élément(s)'">Page 1 sur 1</span>
+                <div class="pager-ctrls">
+                    <a th:if="${page.hasPrevious()}"
+                       th:href="@{/teams(page=${page.number - 1}, size=${pageSize}, search=${search}, status=${status})}">‹</a>
+                    <span class="cur" th:text="${page.number + 1}">1</span>
+                    <a th:if="${page.hasNext()}"
+                       th:href="@{/teams(page=${page.number + 1}, size=${pageSize}, search=${search}, status=${status})}">›</a>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+</body>
+</html>

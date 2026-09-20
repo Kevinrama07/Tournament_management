@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Tableau de bord · Trophée')}"></head>
+<body class="anim">
+
+<div th:replace="~{fragments/layout :: sidebar('dashboard')}"></div>
+
+<div class="app-main">
+    <header th:replace="~{fragments/layout :: topbar('Tableau de bord')}"></header>
+
+    <main class="content">
+        <div th:replace="~{fragments/messages :: messages}"></div>
+
+        <div class="grid-cards grid-4 grid-gap mb">
+            <div class="card tile tile-accent tilt" data-aos="fade-up" data-aos-delay="0">
+                <span class="tile-label">Tournois</span>
+                <span class="tile-value count-up" th:attr="data-count=${stats.totalTournaments}" th:text="${stats.totalTournaments}">0</span>
+            </div>
+            <div class="card tile tile-amber tilt" data-aos="fade-up" data-aos-delay="80">
+                <span class="tile-label">Équipes</span>
+                <span class="tile-value count-up" th:attr="data-count=${stats.teamsManaged}" th:text="${stats.teamsManaged}">0</span>
+            </div>
+            <div class="card tile tile-teal tilt" data-aos="fade-up" data-aos-delay="160">
+                <span class="tile-label">Joueurs</span>
+                <span class="tile-value count-up" th:attr="data-count=${stats.playersManaged}" th:text="${stats.playersManaged}">0</span>
+            </div>
+            <div class="card tile tile-blue tilt" data-aos="fade-up" data-aos-delay="240">
+                <span class="tile-label">En cours</span>
+                <span class="tile-value count-up" th:attr="data-count=${stats.activeTournaments}" th:text="${stats.activeTournaments}">0</span>
+            </div>
+        </div>
+
+        <div class="grid-cards grid-2 grid-gap">
+            <!-- Tournois récents -->
+            <section class="card card-lift" data-aos="fade-right" data-aos-delay="60">
+                <div class="card-head">
+                    <h2><span class="kicker">◆</span>Tournois récents</h2>
+                    <a href="/tournaments" class="btn btn-ghost btn-sm">Tous</a>
+                </div>
+                <div class="table-wrap">
+                    <table class="sheet">
+                        <thead>
+                        <tr>
+                            <th>Tournoi</th>
+                            <th>Dates</th>
+                            <th>Statut</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="t : ${latestTournaments}">
+                            <td>
+                                <strong th:text="${t.name}">Nom</strong><br>
+                                <span class="muted" th:text="${t.location}">Lieu</span>
+                            </td>
+                            <td class="num nowrap">
+                                <span th:text="${#temporals.format(t.startDate,'dd/MM')}">01/01</span> –
+                                <span th:text="${#temporals.format(t.endDate,'dd/MM/yy')}">01/01</span>
+                            </td>
+                            <td><span th:replace="~{fragments/messages :: statusBadge(${t.status})}"></span></td>
+                        </tr>
+                        <tr th:if="${latestTournaments.isEmpty()}">
+                            <td colspan="3"><div class="empty">Aucun tournoi</div></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Derniers matchs -->
+            <section class="card card-lift" data-aos="fade-left" data-aos-delay="60">
+                <div class="card-head">
+                    <h2><span class="kicker">⊕</span>Derniers matchs</h2>
+                    <a href="/matches" class="btn btn-ghost btn-sm">Tous</a>
+                </div>
+                <div class="stagger">
+                    <div th:each="m : ${recentMatches}" class="match-row">
+                        <div class="mr-home">
+                            <span class="tname" th:text="${m.homeTeamName ?: '—'}">Domicile</span>
+                        </div>
+                        <div class="mr-score">
+                            <a th:href="@{/matches/{id}(id=${m.id})}"
+                               th:text="${m.status.name() == 'TERMINE' ? (m.homeScore + ' - ' + m.awayScore) : 'VS'}">0 - 0</a>
+                        </div>
+                        <div class="mr-away">
+                            <span class="tname" th:text="${m.awayTeamName ?: '—'}">Visiteur</span>
+                        </div>
+                    </div>
+                    </div>
+                    <div th:if="${recentMatches.isEmpty()}">
+                    <div class="empty">Aucun match joué</div>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+
+</body>
+</html>

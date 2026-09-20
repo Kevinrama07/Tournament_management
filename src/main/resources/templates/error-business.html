@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Erreur · Trophée')}"></head>
+<body class="anim">
+
+<div th:replace="~{fragments/layout :: sidebar('')}"></div>
+
+<div class="app-main">
+    <header th:replace="~{fragments/layout :: topbar('Erreur')}"></header>
+
+    <main class="content">
+        <div th:replace="~{fragments/messages :: messages}"></div>
+
+        <section class="card collision">
+            <div class="card-head">
+                <h2><span class="kicker">⚠</span>Cette opération n'est pas possible</h2>
+            </div>
+            <div class="card-body">
+                <p th:text="${errorMessage} ?: 'L\'action demandée est invalide dans l\'état actuel. Vérifiez les étapes précédentes puis réessayez.'"
+                   style="font-size:16px">Message</p>
+                <p class="muted" style="font-size:13px">Consultation seule sans restriction — toute demande de modification d'un flux d'appui est refusée par les règles métier du tournoi.</p>
+                <div class="btn-row mt">
+                    <a href="/" class="btn btn-primary">Retour à l'accueil</a>
+                    <a href="/tournaments" class="btn btn-ghost">Liste des tournois</a>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+</body>
+</html>

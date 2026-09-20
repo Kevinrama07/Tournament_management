@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} ?: 'Trophée · Gestion de tournois'">Trophée · Gestion de tournois</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
+    <script defer src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script defer th:src="@{/js/main.js}"></script>
+</head>
+
+<body>
+
+<!-- ======================= SIDEBAR ======================= -->
+<aside th:fragment="sidebar(active)" class="site-sidebar">
+    <a href="/" class="brand" th:classappend="' active'">
+        <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M12 3l7 4v7l-7 4-7-4V7l7-4z"/>
+                <circle cx="12" cy="11" r="2.4" fill="currentColor" stroke="none"/>
+            </svg>
+        </span>
+        <span class="brand-text">
+            <span class="brand-line1">TROPHÉE</span>
+            <span class="brand-line2">Gestion de tournois</span>
+        </span>
+    </a>
+
+    <nav class="nav">
+        <a href="/" th:classappend="${active == 'dashboard'} ? ' active'"><span class="nav-ico">▮</span>Tableau de bord</a>
+        <a href="/tournaments" th:classappend="${active == 'tournaments'} ? ' active'"><span class="nav-ico">◆</span>Tournois</a>
+        <a href="/matches" th:classappend="${active == 'matches'} ? ' active'"><span class="nav-ico">⊕</span>Matchs</a>
+        <a href="/teams" th:classappend="${active == 'teams'} ? ' active'"><span class="nav-ico">▲</span>Équipes</a>
+        <a sec:authorize="hasRole('ADMIN')" href="/admin/users" th:classappend="${active == 'admin'} ? ' active'"><span class="nav-ico">⚙</span>Administration</a>
+    </nav>
+
+    <div class="sidebar-foot">
+        <div class="pitch-stripe"><span></span><span></span><span></span><span></span><span></span></div>
+        <p class="sidebar-note">Association sportive<br>Plateforme de compétitions</p>
+    </div>
+</aside>
+
+<!-- ======================= TOPBAR ======================= -->
+<header th:fragment="topbar(pageTitle)" class="site-topbar">
+    <h1 class="page-title" th:text="${pageTitle} ?: 'Tableau de bord'">Tableau de bord</h1>
+    <div class="topbar-right">
+        <span class="session-role" sec:authentication="authorities[0].authority">ROLE</span>
+        <div class="session-chip">
+            <span class="avatar" th:text="${#strings.substring(#authentication.name,0,1).toUpperCase()}">A</span>
+            <div class="session-meta">
+                <strong sec:authentication="name">user</strong>
+                <small sec:authentication="name">utilisateur</small>
+            </div>
+            <form th:action="@{/logout}" method="post" class="logout-form">
+                <button type="submit" class="btn btn-ghost btn-sm" title="Se déconnecter">⎋</button>
+            </form>
+        </div>
+    </div>
+</header>
+
+</body>
+</html>

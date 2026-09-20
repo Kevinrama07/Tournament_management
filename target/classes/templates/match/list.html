@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Matchs · Trophée')}"></head>
+<body class="anim">
+
+<div th:replace="~{fragments/layout :: sidebar('matches')}"></div>
+
+<div class="app-main">
+    <header th:replace="~{fragments/layout :: topbar('Matchs')}"></header>
+
+    <main class="content">
+        <div th:replace="~{fragments/messages :: messages}"></div>
+
+        <section class="card card-lift mb" data-aos="fade-up">
+            <form method="get" th:action="@{/matches}" class="filterbar">
+                <input class="input grow" type="search" name="search" th:value="${search}"
+                       placeholder="Rechercher une équipe...">
+                <select class="input" name="tournamentId">
+                    <option value="">Tous les tournois</option>
+                    <option th:each="t : ${tournaments}" th:value="${t.id}"
+                            th:text="${t.name}"
+                            th:selected="${tournamentId != null and tournamentId == t.id}">Tournoi</option>
+                </select>
+                <select class="input" name="status">
+                    <option value="">Tous les statuts</option>
+                    <option th:each="s : ${allStatuses}" th:value="${s}"
+                            th:selected="${status != null and status.name() == s.name()}"
+                            th:text="${#strings.replace(s,'_',' ')}">STATUT</option>
+                </select>
+                <input class="input" type="date" name="from" th:value="${from}" title="Du">
+                <input class="input" type="date" name="to" th:value="${to}" title="Au">
+                <button type="submit" class="btn btn-ghost">Filtrer</button>
+            </form>
+        </section>
+
+        <section class="card card-lift" data-aos="fade-up" data-aos-delay="60">
+            <div class="table-wrap">
+                <table class="sheet">
+                    <thead>
+                    <tr>
+                        <th>Tournoi</th>
+                        <th>Maison</th>
+                        <th class="pos">Score</th>
+                        <th>Visiteur</th>
+                        <th>Phase</th>
+                        <th>Statut</th>
+                        <th class="pos">Date</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="m : ${page.content}">
+                        <td class="muted" th:text="${m.tournamentName}">Tournoi</td>
+                        <td th:text="${m.homeTeamName ?: '—'}">Maison</td>
+                        <td class="num" th:text="${m.status.name() == 'TERMINE' ? (m.homeScore + ' - ' + m.awayScore) : '—'}">0 - 0</td>
+                        <td th:text="${m.awayTeamName ?: '—'}">Visiteur</td>
+                        <td class="muted" th:text="${#strings.replace(m.phase,'_',' ') + ' · jour ' + m.roundNumber}">Phase</td>
+                        <td><span th:replace="~{fragments/messages :: statusBadge(${m.status})}"></span></td>
+                        <td class="num muted" th:text="${#temporals.format(m.scheduledAt,'dd/MM HH:mm')}">Date</td>
+                        <td class="nowrap">
+                            <a th:href="@{/matches/{id}(id=${m.id})}" class="btn btn-ghost btn-sm">Ouvrir</a>
+                            <sec:authorize access="hasAnyRole('ADMIN','MANAGER','OPERATOR')">
+                            <a th:if="${m.status.name() == 'PROGRAMME'}"
+                               th:href="@{/matches/{id}(id=${m.id})}" class="btn btn-primary btn-sm">Résultat</a>
+                            </sec:authorize>
+                        </td>
+                    </tr>
+                    <tr th:if="${page.content.isEmpty()}">
+                        <td colspan="8"><div class="empty">Aucun match trouvé</div></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pager">
+                <span th:text="'Page ' + (${page.number} + 1) + ' sur ' + (${page.totalPages == 0 ? 1 : page.totalPages}) + ' · ' + ${page.totalElements} + ' match(s)'">Page 1 sur 1</span>
+                <div class="pager-ctrls">
+                    <a th:if="${page.hasPrevious()}"
+                       th:href="@{/matches(page=${page.number - 1}, size=${pageSize}, search=${search}, tournamentId=${tournamentId}, status=${status}, from=${from}, to=${to})}">‹</a>
+                    <span class="cur" th:text="${page.number + 1}">1</span>
+                    <a th:if="${page.hasNext()}"
+                       th:href="@{/matches(page=${page.number + 1}, size=${pageSize}, search=${search}, tournamentId=${tournamentId}, status=${status}, from=${from}, to=${to})}">›</a>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+</body>
+</html>

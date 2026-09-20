@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Édition équipe · Trophée')}"></head>
+<body class="anim">
+
+<div th:replace="~{fragments/layout :: sidebar('teams')}"></div>
+
+<div class="app-main">
+    <header th:replace="~{fragments/layout :: topbar(${mode == 'edit'} ? 'Modifier l\'équipe' : 'Nouvelle équipe')}"></header>
+
+    <main class="content">
+        <div th:replace="~{fragments/messages :: messages}"></div>
+
+        <section class="card card-lift" style="max-width:720px" data-aos="fade-up">
+            <div class="card-head">
+                <h2><span class="kicker">▲</span>
+                    <span th:text="${mode == 'edit'} ? 'Fiche de l\'équipe' : 'Nouvelle équipe'">Titre</span>
+                </h2>
+            </div>
+
+            <form th:action="${mode == 'edit'} ? @{/teams/{id}(id=${teamId})} : @{/teams}"
+                  th:object="${form}" method="post" class="card-body">
+                <div class="form-grid">
+                    <div class="field">
+                        <label class="req" for="name">Nom de l'équipe</label>
+                        <input class="input" th:classappend="${#fields.hasErrors('name')} ? 'has-error'" type="text" id="name" th:field="*{name}" placeholder="Lions de Dakar">
+                        <span class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Erreur</span>
+                    </div>
+                    <div class="field">
+                        <label class="req" for="city">Ville</label>
+                        <input class="input" th:classappend="${#fields.hasErrors('city')} ? 'has-error'" type="text" id="city" th:field="*{city}" placeholder="Dakar">
+                        <span class="field-error" th:if="${#fields.hasErrors('city')}" th:errors="*{city}">Erreur</span>
+                    </div>
+                    <div class="field">
+                        <label for="coach">Entraîneur</label>
+                        <input class="input" type="text" id="coach" th:field="*{coach}" placeholder="M. Diallo">
+                    </div>
+                    <div class="field">
+                        <label for="logo">Logo (URL)</label>
+                        <input class="input" type="text" id="logo" th:field="*{logo}" placeholder="/img/shield.svg">
+                    </div>
+                    <div class="full btn-row">
+                        <button type="submit" class="btn btn-primary"
+                                th:text="${mode == 'edit'} ? 'Enregistrer' : 'Créer l\'équipe'">Créer</button>
+                        <a th:href="${mode == 'edit'} ? @{/teams/{id}(id=${teamId})} : @{/teams}" class="btn btn-ghost">Annuler</a>
+                    </div>
+                </div>
+            </form>
+        </section>
+    </main>
+</div>
+
+</body>
+</html>

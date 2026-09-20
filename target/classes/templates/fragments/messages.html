@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="messages" class="toasts">
+    <div class="toast toast-success" th:if="${successMessage}">
+        <span class="toast-ico">✓</span><span th:text="${successMessage}">Message</span>
+    </div>
+    <div class="toast toast-error" th:if="${errorMessage}">
+        <span class="toast-ico">✕</span><span th:text="${errorMessage}">Message</span>
+    </div>
+</div>
+
+<span th:fragment="statusBadge(value)" th:attr="class='badge badge-' + ${#strings.toLowerCase(value)}"
+      th:text="${#strings.replace(value,'_',' ')}">STATUT</span>
+
+<span th:fragment="teamTag(name)" class="team-tag" th:text="${name}">EQUIPE</span>
+
+</body>
+</html>

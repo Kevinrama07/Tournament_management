@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Administration · Trophée')}"></head>
+<body class="anim">
+
+<div th:replace="~{fragments/layout :: sidebar('admin')}"></div>
+
+<div class="app-main">
+    <header th:replace="~{fragments/layout :: topbar('Administration des comptes')}"></header>
+
+    <main class="content">
+        <div th:replace="~{fragments/messages :: messages}"></div>
+
+        <section class="card card-lift mb" data-aos="fade-up">
+            <div class="card-head"><h2><span class="kicker">☰</span>Comptes utilisateurs</h2></div>
+            <div class="table-wrap">
+                <table class="sheet">
+                    <thead>
+                    <tr><th>Identifiant</th><th>Nom affiché</th><th>Rôle</th><th>Activé</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="u : ${users}">
+                        <td class="tname" th:text="${u.username}">login</td>
+                        <td th:text="${u.displayName}">Nom</td>
+                        <td>
+                            <span class="badge badge-admin" th:text="${u.role}">ROLE</span>
+                        </td>
+                        <td th:text="${u.enabled} ? 'Oui' : 'Non'">Oui</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="card card-lift" style="max-width:640px" data-aos="fade-up" data-aos-delay="60">
+            <div class="card-head"><h2><span class="kicker">⊕</span>Créer un compte</h2></div>
+            <form method="post" th:action="@{/admin/users}" class="card-body">
+                <div class="form-grid">
+                    <div class="field">
+                        <label class="req" for="username">Identifiant</label>
+                        <input class="input" type="text" id="username" name="username" required>
+                    </div>
+                    <div class="field">
+                        <label class="req" for="displayName">Nom affiché</label>
+                        <input class="input" type="text" id="displayName" name="displayName" required>
+                    </div>
+                    <div class="field">
+                        <label class="req" for="role">Rôle</label>
+                        <select class="input" id="role" name="role">
+                            <option th:each="r : ${roles}" th:value="${r}" th:text="${r}">ROLE</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label class="req" for="password">Mot de passe</label>
+                        <input class="input" type="password" id="password" name="password" required minlength="6">
+                    </div>
+                    <div class="full">
+                        <button type="submit" class="btn btn-primary">Créer</button>
+                    </div>
+                </div>
+            </form>
+        </section>
+    </main>
+</div>
+
+</body>
+</html>

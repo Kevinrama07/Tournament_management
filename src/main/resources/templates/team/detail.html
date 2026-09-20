@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(${team.name} + ' · Trophée')}"></head>
+<body class="anim">
+
+<div th:replace="~{fragments/layout :: sidebar('teams')}"></div>
+
+<div class="app-main">
+    <header th:replace="~{fragments/layout :: topbar(${team.name})}"></header>
+
+    <main class="content">
+        <div th:replace="~{fragments/messages :: messages}"></div>
+
+        <section class="card card-lift mb" data-aos="fade-up">
+            <div class="card-head">
+                <h2><span class="kicker">▲</span>Effectif</h2>
+                <div class="btn-row">
+                    <sec:authorize access="hasAnyRole('ADMIN','MANAGER')">
+                        <a th:href="@{/teams/{id}/edit(id=${team.id})}" class="btn btn-ghost btn-sm">Modifier</a>
+                    </sec:authorize>
+                    <sec:authorize access="hasRole('ADMIN')">
+                        <form method="post" th:action="@{/teams/{id}/delete(id=${team.id})}" style="margin:0">
+                            <button class="btn btn-danger btn-sm">✕ Supprimer</button>
+                        </form>
+                    </sec:authorize>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="meta-line">
+                    <span>Ville : <b th:text="${team.city}">—</b></span>
+                    <span>Entraîneur : <b th:text="${team.coach ?: '—'}">—</b></span>
+                    <span>Joueurs : <b th:text="${#lists.size(players)}">0</b></span>
+                    <span><span th:replace="~{fragments/messages :: statusBadge(${team.status})}"></span></span>
+                </div>
+            </div>
+        </section>
+
+        <div class="grid-cards grid-2 grid-gap">
+            <section class="card card-lift" data-aos="fade-right">
+                <div class="card-head">
+                    <h2><span class="kicker">✦</span>Joueurs</h2>
+                </div>
+                <div class="table-wrap">
+                    <table class="sheet">
+                        <thead>
+                        <tr><th class="pos">#</th><th>Joueur</th><th>Poste</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="p : ${players}">
+                            <td class="pos"><strong th:text="${p.shirtNumber ?: '—'}">9</strong></td>
+                            <td>
+                                <strong th:text="${p.firstName + ' ' + p.lastName}">Nom</strong>
+                            </td>
+                            <td class="muted" th:text="${p.position ?: '—'}">Poste</td>
+                            <td class="nowrap">
+                                <sec:authorize access="hasAnyRole('ADMIN','MANAGER','OPERATOR')">
+                                <form method="post" th:action="@{/teams/{id}/players/{pid}/delete(id=${team.id}, pid=${p.id})}" style="margin:0">
+                                    <button class="btn btn-danger btn-sm">Retirer</button>
+                                </form>
+                                </sec:authorize>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(players)}">
+                            <td colspan="4"><div class="empty">Aucun joueur</div></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <div class="grid-cards" style="gap:16px;align-content:start">
+                <section class="card card-lift" data-aos="fade-left">
+                    <div class="card-head"><h2><span class="kicker">⊕</span>Ajouter un joueur</h2></div>
+                    <sec:authorize access="hasAnyRole('ADMIN','MANAGER','OPERATOR')">
+                    <form method="post" th:action="@{/teams/{id}/players(id=${team.id})}" th:object="${playerForm}" class="card-body">
+                        <div class="form-grid">
+                            <div class="field">
+                                <label class="req" for="firstName">Prénom</label>
+                                <input class="input" th:classappend="${#fields.hasErrors('firstName')} ? 'has-error'" type="text" id="firstName" th:field="*{firstName}">
+                                <span class="field-error" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}">Erreur</span>
+                            </div>
+                            <div class="field">
+                                <label class="req" for="lastName">Nom</label>
+                                <input class="input" th:classappend="${#fields.hasErrors('lastName')} ? 'has-error'" type="text" id="lastName" th:field="*{lastName}">
+                                <span class="field-error" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}">Erreur</span>
+                            </div>
+                            <div class="field">
+                                <label for="position">Poste</label>
+                                <input class="input" type="text" id="position" th:field="*{position}" placeholder="Attaquant">
+                            </div>
+                            <div class="field">
+                                <label for="shirtNumber">Numéro</label>
+                                <input class="input" type="number" id="shirtNumber" th:field="*{shirtNumber}" min="0" max="99">
+                            </div>
+                            <div class="full">
+                                <button type="submit" class="btn btn-primary">Ajouter le joueur</button>
+                            </div>
+                        </div>
+                    </form>
+                    </sec:authorize>
+                </section>
+
+                <section class="card card-lift" data-aos="fade-left" data-aos-delay="80">
+                    <div class="card-head"><h2><span class="kicker">◆</span>Historique des tournois</h2></div>
+                    <div th:each="h : ${history}"
+                         style="padding:12px 20px;border-bottom:1px solid var(--line)"
+                         class="flex between">
+                        <span class="tname" th:text="${h.teamName}">Tournoi</span>
+                        <span class="faint" th:text="${#temporals.format(h.registrationDate,'dd/MM/yy')}">Date</span>
+                    </div>
+                    <div th:if="${#lists.isEmpty(history)}" class="empty">Aucune participation</div>
+                </section>
+            </div>
+        </div>
+    </main>
+</div>
+
+</body>
+</html>

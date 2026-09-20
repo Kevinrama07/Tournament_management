@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Match #' + ${match.id} + ' · Trophée')}"></head>
+<body class="anim">
+
+<div th:replace="~{fragments/layout :: sidebar('matches')}"></div>
+
+<div class="app-main">
+    <header th:replace="~{fragments/layout :: topbar('Détail du match')}"></header>
+
+    <main class="content">
+        <div th:replace="~{fragments/messages :: messages}"></div>
+
+        <section class="card mb" data-aos="fade-down">
+            <div class="card-head">
+                <h2>
+                    <span class="kicker">⊕</span>
+                    <a th:href="@{/tournaments/{id}(id=${match.tournamentId})}" class="tname"
+                       style="text-decoration:none" th:text="${match.tournamentName}">Tournoi</a>
+                </h2>
+                <div class="btn-row">
+                    <span class="faint" th:text="${#strings.replace(match.phase,'_',' ') + ' · Tour ' + match.roundNumber}">Phase</span>
+                    <span th:replace="~{fragments/messages :: statusBadge(${match.status})}"></span>
+                </div>
+            </div>
+
+            <div class="scoreboard">
+                <div class="sb-team"
+                     th:classappend="${match.winnerTeamId != null and match.winnerTeamId == match.homeTeamId} ? 'sb-winner'">
+                    <span class="shield-mini" th:if="${match.homeTeamId != null}"
+                          th:text="${match.homeTeamName != null and !match.homeTeamName.isEmpty()} ? ${#strings.substring(match.homeTeamName,0,1)} : '?'">A</span>
+                    <span class="tname" th:text="${match.homeTeamName ?: 'Vainqueur (1)'}">Maison</span>
+                    <small class="muted" th:if="${match.homeTeamId == null}" th:text="'Qualifié · match ' + ${match.homeSourceMatchId}">Source</small>
+                </div>
+
+                <div class="sb-score">
+                    <span class="tcount"
+                          th:text="${match.status.name() == 'TERMINE'} ? (match.homeScore + '-' + match.awayScore) : 'VS'">0 - 0</span>
+                    <small th:if="${match.winnerTeamName != null}"
+                           th:text="'Vainqueur : ' + ${match.winnerTeamName}">Vainqueur</small>
+                    <small th:if="${match.winnerTeamId == null and match.status.name() == 'TERMINE'}" class="muted">Match nul</small>
+                </div>
+
+                <div class="sb-team"
+                     th:classappend="${match.winnerTeamId != null and match.winnerTeamId == match.awayTeamId} ? 'sb-winner'">
+                    <span class="shield-mini" th:if="${match.awayTeamId != null}"
+                          th:text="${match.awayTeamName != null and !match.awayTeamName.isEmpty()} ? ${#strings.substring(match.awayTeamName,0,1)} : '?'">B</span>
+                    <span class="tname" th:text="${match.awayTeamName ?: 'Vainqueur (2)'}">Visiteur</span>
+                    <small class="muted" th:if="${match.awayTeamId == null}" th:text="'Qualifié · match ' + ${match.awaySourceMatchId}">Source</small>
+                </div>
+            </div>
+
+            <div class="sb-info">
+                <span th:text="'🗓 ' + ${#temporals.format(match.scheduledAt,'EEEE dd MMMM yyyy HH:mm')}">Date</span>
+                <span th:if="${match.venue != null and !match.venue.isEmpty()}" th:text="'📍 ' + ${match.venue}">Lieu</span>
+            </div>
+        </section>
+
+        <section class="card card-lift" data-aos="fade-up">
+            <div class="card-head"><h2><span class="kicker">✎</span>Saisie du résultat</h2></div>
+
+            <div th:if="${match.status.name() == 'PROGRAMME'}">
+                <sec:authorize access="hasAnyRole('ADMIN','MANAGER','OPERATOR')">
+                    <form method="post" th:action="@{/matches/{id}/result(id=${match.id})}"
+                          th:object="${form}" class="card-body">
+                        <div class="filterbar" style="justify-content:flex-start">
+                            <label class="muted" th:text="'Buts ' + (${match.homeTeamName ?: 'év. 1'})">Home</label>
+                            <input class="input" type="number" min="0" max="99" style="width:90px"
+                                   th:field="*{homeScore}">
+                            <span class="faint">—</span>
+                            <input class="input" type="number" min="0" max="99" style="width:90px"
+                                   th:field="*{awayScore}">
+                            <label class="muted" th:text="(${match.awayTeamName ?: 'év. 2'})">Away</label>
+                            <button type="submit" class="btn btn-primary">Valider</button>
+                        </div>
+                        <div th:if="${#fields.hasErrors('homeScore')}" class="field-error" th:errors="*{homeScore}">err</div>
+                        <div th:if="${#fields.hasErrors('awayScore')}" class="field-error" th:errors="*{awayScore}">err</div>
+                        <p class="muted" style="font-size:12.5px">
+                            Règles — en élimination directe : le match nul est interdit et les prolongations /
+                            tirs au but sont gérés par la saisie d'un score de victoire. Le tour suivant sera
+                            généré automatiquement dès que tous les matchs du tour courant sont terminés.
+                        </p>
+                    </form>
+                </sec:authorize>
+                <sec:authorize access="!hasAnyRole('ADMIN','MANAGER','OPERATOR')">
+                    <div class="empty">Le match est programmé — un opérateur doit saisir le résultat.</div>
+                </sec:authorize>
+            </div>
+
+            <div th:if="${match.status.name() == 'TERMINE'}">
+                <div class="resume collision">
+                    <h3 class="kicker">◆ Résultat final</h3>
+                    <p th:text="${match.homeTeamName + ' ' + match.homeScore + ' — ' + match.awayScore + ' ' + match.awayTeamName}">Résultat</p>
+                    <p th:if="${match.winnerTeamName != null}"
+                       th:text="'Qualification : ' + ${match.winnerTeamName}">Vainqueur</p>
+                </div>
+            </div>
+
+            <div th:if="${match.status.name() == 'ANNULE'}">
+                <div class="resume">
+                    <p class="muted">Ce match a été annulé.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Connexion · Trophée')}"></head>
+<body>
+
+<div class="login-wrap">
+    <div class="login-left">
+        <div class="login-mark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M12 3l7 4v7l-7 4-7-4V7l7-4z"/>
+                <circle cx="12" cy="11" r="2.4" fill="currentColor" stroke="none"/>
+            </svg>
+        </div>
+
+        <div class="login-hero">
+            <h2>Chaque tournoi mérite son <em>scoreboard</em>.</h2>
+            <p>Créez vos compétitions, gérez les équipes, générez les calendriers,
+               saisissez les résultats et laissez le moteur calculer le classement.</p>
+        </div>
+
+        <div class="login-pitchstats">
+            <div><b>2+</b><span>formats</span></div>
+            <div><b>64</b><span>équipes max</span></div>
+            <div><b>Auto</b><span>calendrier</span></div>
+            <div><b>4</b><span>rôles</span></div>
+        </div>
+    </div>
+
+    <div class="login-right">
+        <div class="login-panel">
+            <h1>Connexion</h1>
+            <p class="sub">Accédez à la plateforme de gestion des compétitions.</p>
+
+            <div class="login-alert" th:if="${error}" th:text="${error}">Erreur</div>
+            <div class="login-alert ok" th:if="${message}" th:text="${message}">Info</div>
+
+            <form th:action="@{/login}" method="post" class="form-grid">
+                <div class="field full">
+                    <label for="username">Identifiant</label>
+                    <input class="input" type="text" id="username" name="username" autocomplete="username" autofocus required>
+                </div>
+                <div class="field full">
+                    <label for="password">Mot de passe</label>
+                    <input class="input" type="password" id="password" name="password" autocomplete="current-password" required>
+                </div>
+                <div class="full">
+                    <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Entrer</button>
+                </div>
+            </form>
+
+            <div class="demo-hint">
+                Comptes de démonstration — mot de passe <code>password</code><br>
+                <strong>admin</strong> · <strong>manager</strong> · <strong>operator</strong> · <strong>user</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
